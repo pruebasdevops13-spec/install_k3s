@@ -1,0 +1,22 @@
+# 02-gitea-complete.yaml
+# Gitea Helm → LoadBalancer 10.0.20.203
+# Ingress nginx git.exceltic.test → 10.0.20.200
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gitea-ingress
+  namespace: gitea
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: git.exceltic.test
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gitea
+            port:
+              number: 80
