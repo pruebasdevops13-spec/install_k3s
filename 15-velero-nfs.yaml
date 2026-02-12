@@ -1,0 +1,72 @@
+# 15-velero-nfs.yaml - Velero con NFS filesystem (NO S3)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: velero
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloud-credentials
+  namespace: velero
+type: Opaque
+# VACÍO para filesystem (no necesita credenciales S3)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: velero
+  namespace: velero
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: velero
+  template:
+    metadata:
+      labels:
+        name: velero
+    spec:
+      serviceAccountName: velero
+      containers:
+      - name: velero
+        image: velero/velero:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - /velero
+        args:
+        - server
+        env:
+        - name: VELERO_LOG_LEVEL
+          value: "info"
+        volumeMounts:
+        - mountPath: /backups
+          name: nfs-backups
+        - mountPath: /target
+          name: shared-fs-backup
+      volumes:
+      - name: nfs-backups
+        nfs:
+          server: 10.0.20.10  # ← TU NFS SERVER
+          path: /k8s-backups/velero
+      - name: shared-fs-backup
+        emptyDir: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: velero
+  namespace: velero
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: velero
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: velero
+  namespace: velero
