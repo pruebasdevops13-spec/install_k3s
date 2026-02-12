@@ -1,0 +1,45 @@
+# 14-gitea-actions-runner.yaml ✅ FINAL
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gitea-actions
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gitea-runner-token
+  namespace: gitea-actions
+type: Opaque
+stringData:
+  TOKEN: "77Av92YetCIH9I3psK3bRDQgFhgS8SSq0EoKs5bz"  # ← TU TOKEN
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea-runner-prod
+  namespace: gitea-actions
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitea-runner
+  template:
+    metadata:
+      labels:
+        app: gitea-runner
+    spec:
+      containers:
+      - name: act-runner
+        image: gitea/act_runner:latest
+        env:
+        - name: GITEA_INSTANCE_URL
+          value: "http://git.exceltic.test"
+        - name: GITEA_RUNNER_REGISTRATION_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: gitea-runner-token
+              key: TOKEN
+        - name: GITEA_RUNNER_NAME
+          value: "k3s-runner-prod"
+        - name: GITEA_RUNNER_LABELS
+          value: "ubuntu-latest:docker://node:20-bullseye,kubernetes,linux,k3s"
