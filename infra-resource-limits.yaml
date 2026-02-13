@@ -1,0 +1,31 @@
+# infra-resource-limits.yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: infra-quota
+  namespace: infra
+spec:
+  hard:
+    limits.cpu: "4"
+    limits.memory: "6Gi"
+    pods: "30"
+    requests.cpu: "2"
+    requests.memory: "2Gi"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: infra-limits
+  namespace: infra
+spec:
+  limits:
+  - type: Container
+    max:
+      cpu: "4"
+      memory: "6Gi"
+    defaultRequest:
+      cpu: "100m"
+      memory: "128Mi"
+    default:
+      cpu: "500m"
+      memory: "512Mi"
